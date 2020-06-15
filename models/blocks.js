@@ -1,5 +1,6 @@
 const Action = require("./actions");
 const crypto = require("crypto-js");
+const { constants } = require("../utils/constants");
 
 class Block {
   /**
@@ -14,9 +15,12 @@ class Block {
     this.nonce = nonce;
     this.previousBlockHash = previousBlockHash;
     this.actions = actions;
-    if (index !== 0) {
-      this.timestamp = Date.now();
-    } else {
+
+    /**
+     * @type {number}
+     */
+    this.timestamp = Date.now();
+    if (index === 0) {
       this.timestamp = constants.GENESIS_DATE;
     }
   }
@@ -70,13 +74,13 @@ class Block {
 
   /**
    *
-   * @param {{index:number, nonce:number, previousBlockHash: string, timestamp:Date,actions:Action[]}} block
+   * @param {{index:number, nonce:number, previousBlockHash: string, timestamp:number, actions:Action[]}} block
    */
   parseBlock(block) {
     this.index = block.index;
     this.nonce = block.nonce;
     this.previousBlockHash = block.previousBlockHash;
-    this.timestamp = new Date(block.timestamp.getTime());
+    this.timestamp = block.timestamp;
     this.actions = block.actions.map((action) => {
       const parsedAction = new Action(null, null, null, null);
       parsedAction.parseData(action);

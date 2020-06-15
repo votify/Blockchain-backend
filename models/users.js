@@ -1,3 +1,5 @@
+const { ArrayToStringHex, JSONToUint8Array } = require("../utils/function");
+
 class Users {
   /**
    *
@@ -43,6 +45,10 @@ class Users {
     this.name = user.name;
     this.pubKey = Uint8Array.from(user.pubKey);
   }
+
+  getPubKeyHex() {
+    return ArrayToStringHex(this.pubKey);
+  }
 }
 
-module.exports.Users;
+module.exports = Users;

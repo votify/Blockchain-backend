@@ -1,12 +1,11 @@
-const { GetID } = require("../utils/function");
-const Elections = require("./election");
+const { GetID, SHA256DataToHex } = require("../utils/function");
 const Elections = require("./election");
 
 class Action {
   /**
    *
    * @param {string} type
-   * @param {Elections|Users} data -Class Users or Elections
+   * @param {Elections|Users|Vote} data -Class Users or Elections
    * @param {Uint8Array} signature
    * @param {string} lock
    */
@@ -45,15 +44,19 @@ class Action {
 
   /**
    *
-   * @param {{id:string, type:string, timeStamp:Date, data:Elections|Users, signature:Uint8Array, lock:string}} action
+   * @param {{id:string, type:string, timeStamp:number, data:Elections|Users|Vote, signature:Uint8Array, lock:string}} action
    */
   parseData(action) {
     this.id = action.id;
     this.type = action.type;
-    this.timeStamp = new Date(action.timeStamp.getTime());
+    this.timeStamp = action.timeStamp;
     this.data.parseData(action.data.getData());
     this.signature = Uint8Array.from(action.signature);
     this.lock = action.lock;
+  }
+
+  SHA256TransactionToHex() {
+    return SHA256DataToHex(this.getDetails());
   }
 }
 
