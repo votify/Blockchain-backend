@@ -48,12 +48,11 @@ app.post("/nodes", (req, res) => {
 });
 
 app.post("/action", (req, res) => {
-  const action = req.body;
-  console.log(action);
-  let clientAction = new Action(null, null, null, null);
-  clientAction.parseData(action);
+  const { type, data, signature, lock } = req.body;
+  console.log(req.body);
+  let clientAction = new Action(type, data, signature, lock);
   if (blockChain.verifyAction(clientAction)) {
-    res.json({ status: "valid", id: clientAction.id, message: null });
+    res.json({ status: "valid", id: clientAction.id });
     io.emit(actions.ADD_TRANSACTION, clientTansaction);
     blockChain.newAction(clientAction);
     console.log(
@@ -64,7 +63,7 @@ app.post("/action", (req, res) => {
       )}`
     );
   } else {
-    res.json({ status: "invalid", id: null, message: spendResult.message });
+    res.json({ status: "invalid", id: null });
   }
 });
 
