@@ -76,3 +76,42 @@ module.exports.GetID = (timeStamp) => {
     .digest();
   return bs58.encode(buffer);
 };
+
+/**
+ *
+ * @param {string} str
+ */
+const stringToSlug = (str) => {
+  // remove accents
+  var from =
+      "àáãảạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệđùúủũụưừứửữựòóỏõọôồốổỗộơờớởỡợìíỉĩịäëïîöüûñçýỳỹỵỷ",
+    to =
+      "aaaaaaaaaaaaaaaaaeeeeeeeeeeeduuuuuuuuuuuoooooooooooooooooiiiiiaeiiouuncyyyyy";
+  for (var i = 0, l = from.length; i < l; i++) {
+    str = str.replace(RegExp(from[i], "gi"), to[i]);
+  }
+
+  str = str
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, "");
+
+  return str;
+};
+
+/**
+ *
+ * @param {string} name
+ */
+module.exports.GetNormalize = (name) => {
+  let toEnglish = stringToSlug(name);
+  let wordList = toEnglish.split(" ");
+  let normalizeWord = wordList.map((value, index) => {
+    if (index !== 0) {
+      value = value.replace(value[0], value[0].toUpperCase());
+    }
+    return value;
+  });
+
+  return normalizeWord.join("");
+};

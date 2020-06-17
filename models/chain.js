@@ -2,6 +2,7 @@ const Block = require("./blocks");
 const Action = require("./actions");
 const forked = require("../utils/global");
 const { constants } = require("../utils/constants");
+const { GetNormalize } = require("../utils/function");
 const Users = require("./users");
 const secp256k1 = require("secp256k1");
 
@@ -70,7 +71,7 @@ class Chain {
     }
 
     if (action.type === "vote") {
-      let electionId = `${action.data.year}--${action.data.name}`;
+      let electionId = `_${action.data.year}_${GetNormalize(action.data.name)}`;
       let voterList = this.elections[electionId];
       if (voterList === undefined) {
         return false;
@@ -78,10 +79,7 @@ class Chain {
         if (voterList.voters[action.lock] !== undefined) {
           return false;
         } else {
-          let electionPos = this.tableOfContent[voterList.address];
-          let deadline = this.blocks[electionPos.block].actions[
-            electionPos.index
-          ].data.deadline;
+          let deadline = voterList.deadline;
           if (action.timeStamp < deadline) {
             this.elections[electionId].voters[action.lock] = action.id;
           } else {
@@ -101,7 +99,7 @@ class Chain {
    */
   countVote(year, name) {
     let result = {};
-    let electionId = `${year}--${name}`;
+    let electionId = `_${year}_${GetNormalize(name)}`;
     let thisElection = this.elections[electionId];
     if (thisElection === undefined) {
       return false;
@@ -409,18 +407,37 @@ class Chain {
     this.isConfirm = false;
   }
 
+  /**
+   *
+   * @param {number} year
+   * @param {string} name
+   * @param {string[]} nominees
+   * @param {number} deadline
+   */
+  setElection(year, name, nominees, deadline) {
+    let electionId = `_${year}_${GetNormalize(name)}`;
+    this.elections[electionId] = {
+      deadline,
+      nominees,
+      voters: {},
+    };
+  }
+
+  /**
+   *
+   * @param {number} year
+   * @param {string} name
+   * @param {number} newDeadline
+   */
+  extentElection(year, name, newDeadline) {
+    let electionId = `_${year}_${GetNormalize(name)}`;
+    this.elections[electionId].deadline = newDeadline;
+  }
+
   addToToC() {
     for (let index = 0; index < this.actionBuffer.length; index++) {
       let action = this.actionBuffer[index];
       this.tableOfContent[action.id] = { block: this.blocks.length, index };
-
-      if (action.type === "election") {
-        let electionId = `${action.data.year}--${action.data.name}`;
-        this.elections[electionId] = {
-          address: action.id,
-          voters: {},
-        };
-      }
     }
   }
 }

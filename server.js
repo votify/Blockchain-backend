@@ -23,8 +23,8 @@ app.post("/nodes", (req, res) => {
   const { host } = req.body;
   const { callback, nodeLength } = req.query;
   const node = `https://${host}`;
-  nodeList.push(node);
   const socketNode = socketListeners(io, client(node), blockChain);
+  nodeList.push({ node, id: socketNode.id });
   blockChain.addNode(socketNode);
   if (callback === "true") {
     if (parseInt(nodeLength) > 1 && nodeList.length === 1) {
@@ -103,11 +103,6 @@ app.get("/check", (req, res) => {
   res.json(true);
 });
 
-app.get("/node-list", (req, res) => {
-  io.emit("get nodeList");
-  res.json({ status: 200 });
-});
-
 app.get("/getnodelist", (req, res) => {
   res.json(nodeList);
 });
@@ -121,14 +116,26 @@ app.post("/request-list", (req, res) => {
   res.json({ status: "request accepted" }).end();
 });
 
+app.post("/setelection", (req, res) => {
+  const { year, name, nominees, deadline } = req.body;
+  blockChain.setElection(year, name, nominees, deadline);
+  res.json({ status: 200 });
+});
+
+app.post("/extentelection", (req, res) => {
+  const { year, name, newDeadline } = req.body;
+  blockChain.extentElection(year, name, newDeadline);
+  res.json({ status: 200 });
+});
+
 app.post("/update-list", (req, res) => {
   const { requestNodeList } = req.body;
   const currentNode = `https://${req.hostname}`;
   console.log(currentNode);
 
   for (let index = 0; index < requestNodeList.length; index++) {
-    if (requestNodeList[index] !== currentNode) {
-      axios.post(`${requestNodeList[index]}/request-join`, {
+    if (requestNodeList[index].node !== currentNode) {
+      axios.post(`${requestNodeList[index].node}/request-join`, {
         host: req.hostname,
       });
     }
@@ -140,8 +147,8 @@ app.post("/request-join", (req, res) => {
   const { host } = req.body;
   const { callback } = req.query;
   const node = `https://${host}`;
-  nodeList.push(node);
   const socketNode = socketListeners(io, client(node), blockChain);
+  nodeList.push({ node, id: socketNode.id });
   blockChain.addNode(socketNode);
   if (callback === "true") {
     console.info(`Added node ${node} back`);
