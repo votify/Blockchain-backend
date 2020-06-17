@@ -120,7 +120,7 @@ app.post("/request-list", (req, res) => {
 
 app.post("/setelection", (req, res) => {
   const { year, name, nominees, deadline } = req.body;
-  io.emit(actions.ADD_ELECTION, req.body);
+  //io.emit(actions.ADD_ELECTION, req.body);
   blockChain.setElection(year, name, nominees, deadline);
   res.json({ status: 200 });
 });
