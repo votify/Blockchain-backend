@@ -5,6 +5,8 @@ module.exports.actions = {
   CHAIN_VERIFY: "chain_verify",
   ADD_NODE: "add_node",
   HELLO: "hello",
+  ADD_ELECTION: "add_election",
+  EXTENT_ELECTION: "extent_election",
 };
 
 module.exports.constants = {

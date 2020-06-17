@@ -69,6 +69,16 @@ const socketListeners = (io, socket, chain) => {
     chain.confirmBlock();
   });
 
+  socket.on(actions.ADD_ELECTION, (data) => {
+    const { year, name, nominees, deadline } = data;
+    chain.setElection(year, name, nominees, deadline);
+  });
+
+  socket.on(actions.EXTENT_ELECTION, (data) => {
+    const { year, name, newDeadline } = data;
+    chain.extentElection(year, name, newDeadline);
+  });
+
   return socket;
 };
 

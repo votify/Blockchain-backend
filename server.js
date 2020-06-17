@@ -4,6 +4,7 @@ const httpServer = require("http").Server(app);
 const axios = require("axios");
 const io = require("socket.io")(httpServer);
 const client = require("socket.io-client");
+const logger = require("morgan");
 
 const BlockChain = require("./models/chain");
 const Action = require("./models/actions");
@@ -17,6 +18,7 @@ var nodeList = [];
 
 const blockChain = new BlockChain(null, io);
 
+app.use(logger("dev"));
 app.use(bodyParser.json());
 
 app.post("/nodes", (req, res) => {
@@ -118,12 +120,14 @@ app.post("/request-list", (req, res) => {
 
 app.post("/setelection", (req, res) => {
   const { year, name, nominees, deadline } = req.body;
+  io.emit(actions.ADD_ELECTION, req.body);
   blockChain.setElection(year, name, nominees, deadline);
   res.json({ status: 200 });
 });
 
 app.post("/extentelection", (req, res) => {
   const { year, name, newDeadline } = req.body;
+  io.emit(actions.EXTENT_ELECTION, req.body);
   blockChain.extentElection(year, name, newDeadline);
   res.json({ status: 200 });
 });
@@ -166,6 +170,12 @@ io.on("connection", (socket) => {
   console.info(`Socket connected, ID: ${socket.id}`);
   socket.on("disconnect", () => {
     console.log(`Socket disconnected, ID: ${socket.id}`);
+    for (let index = 0; index < nodeList.length; index++) {
+      if (nodeList[index].id === socket.id) {
+        nodeList.splice(index, 1);
+        break;
+      }
+    }
   });
 });
 

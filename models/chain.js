@@ -144,13 +144,14 @@ class Chain {
     let result = [];
 
     for (let index = 0; index < elections.length; index++) {
-      let id = this.elections[elections[index]].address;
-      let electionPos = this.tableOfContent[id];
-      const election = new Action(null, null, null, null);
-      election.parseData(
-        this.blocks[electionPos.block].actions[electionPos.index]
-      );
-      result.push(election);
+      let election = this.elections[elections[index]];
+
+      result.push({
+        year: election.year,
+        name: election.name,
+        nominees: [...election.nominees],
+        deadline: election.deadline,
+      });
     }
     return result;
   }
@@ -417,6 +418,8 @@ class Chain {
   setElection(year, name, nominees, deadline) {
     let electionId = `_${year}_${GetNormalize(name)}`;
     this.elections[electionId] = {
+      year,
+      name,
       deadline,
       nominees,
       voters: {},
