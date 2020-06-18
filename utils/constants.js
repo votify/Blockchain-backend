@@ -7,6 +7,7 @@ module.exports.actions = {
   HELLO: "hello",
   ADD_ELECTION: "add_election",
   EXTENT_ELECTION: "extent_election",
+  CHECKING: "checking",
 };
 
 module.exports.constants = {

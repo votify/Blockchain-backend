@@ -79,6 +79,10 @@ const socketListeners = (io, socket, chain) => {
     chain.extentElection(year, name, newDeadline);
   });
 
+  socket.on(actions.CHECKING, () => {
+    console.log("Im OK");
+  });
+
   return socket;
 };
 

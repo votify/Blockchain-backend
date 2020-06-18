@@ -15,6 +15,7 @@ const socketListeners = require("./socketListeners");
 const PORT = process.env.PORT || 3000;
 
 var nodeList = [];
+var status = false;
 
 const blockChain = new BlockChain(null, io);
 
@@ -178,6 +179,13 @@ app.post("/request-join", (req, res) => {
 
 io.on("connection", (socket) => {
   console.info(`Socket connected, ID: ${socket.id}`);
+
+  if (status === false) {
+    setInterval(function () {
+      io.emit(actions.CHECKING);
+    }, 300000);
+  }
+
   socket.on("disconnect", () => {
     console.log(`Socket disconnected, ID: ${socket.id}`);
     for (let index = 0; index < nodeList.length; index++) {
