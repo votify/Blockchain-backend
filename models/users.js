@@ -15,7 +15,6 @@ class Users {
     } else {
       this.dob = null;
     }
-    this.dob = new Date(dob.getTime());
     this.name = name;
     if (pubKey !== null) {
       this.pubKey = Uint8Array.from(pubKey);
