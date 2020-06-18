@@ -110,16 +110,19 @@ class Chain {
       let votePos = this.tableOfContent[votersList[index]];
       if (votePos !== undefined) {
         let vote = this.blocks[votePos.block].actions[votePos.index];
-        if (result[vote.data.nominee] === undefined) {
-          result[vote.data.nominee] = 1;
+        if (result[GetNormalize(vote.data.nominee)] === undefined) {
+          result[GetNormalize(vote.data.nominee)] = {
+            name: vote.data.nominee,
+            count: 1,
+          };
         } else {
-          result[vote.data.nominee] += 1;
+          result[GetNormalize(vote.data.nominee)].count += 1;
         }
       } else {
         if (result.UnCount === undefined) {
-          result.UnCount = 1;
+          result.UnCount = { name: "Uncount vote", count: 1 };
         } else {
-          result.UnCount += 1;
+          result.UnCount.count += 1;
         }
       }
     }
