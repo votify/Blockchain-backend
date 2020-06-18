@@ -85,10 +85,10 @@ app.get("/check/:address", (req, res) => {
   res.json({ result });
 });
 
-app.get("/count", (req, res) => {
-  const { year, name } = req.query;
+app.post("/count", (req, res) => {
+  const { year, name } = req.body;
   let result = blockChain.countVote(parseInt(year), name);
-  res.json(result);
+  res.json({ result });
 });
 
 app.get("/history/:lock", (req, res) => {

@@ -274,7 +274,10 @@ class Chain {
           if (currentBlockActions[index1].id === lock) {
             let tempAction = new Action(null, null, null, null);
             tempAction.parseData(currentBlockActions[index1]);
-            myActions.push(tempAction);
+            myActions.push({
+              data: tempAction.data.getDetails(),
+              time: tempAction.timeStamp,
+            });
           }
         }
       }
