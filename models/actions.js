@@ -1,7 +1,6 @@
 const { GetID, SHA256DataToHex } = require("../utils/function");
 const Vote = require("./vote");
 const Users = require("./users");
-const Elections = require("./election");
 
 class Action {
   /**
@@ -15,12 +14,22 @@ class Action {
     this.type = type;
     if (type === "users") {
       this.data = new Users(null, null, null, null);
-      this.data.parseData(data);
+      if (data !== null) {
+        this.data.parseData(data);
+      }
     } else {
       this.data = new Vote(null, null, null);
-      this.data.parseData(data);
+      if (data !== null) {
+        this.data.parseData(data);
+      }
     }
-    this.signature = Uint8Array.from(signature);
+
+    if (signature !== null) {
+      this.signature = Uint8Array.from(signature);
+    } else {
+      this.signature = null;
+    }
+
     this.lock = lock;
     this.timeStamp = Date.now();
     this.id = GetID(this.timeStamp);
@@ -58,8 +67,21 @@ class Action {
     this.id = action.id;
     this.type = action.type;
     this.timeStamp = action.timeStamp;
-    this.data.parseData(action.data.getData());
-    this.signature = Uint8Array.from(action.signature);
+
+    if (type === "users") {
+      this.data = new Users(null, null, null, null);
+      this.data.parseData(action.data.getData());
+    } else {
+      this.data = new Vote(null, null, null);
+      this.data.parseData(action.data.getData());
+    }
+
+    if (action.signature !== null) {
+      this.signature = Uint8Array.from(action.signature);
+    } else {
+      this.signature = null;
+    }
+
     this.lock = action.lock;
   }
 
