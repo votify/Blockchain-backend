@@ -10,16 +10,12 @@ const Chain = require("./models/chain");
  * @param {Chain} chain
  */
 const socketListeners = (io, socket, chain) => {
-  socket.on(actions.ADD_TRANSACTION, (newAction) => {
+  socket.on(actions.ADD_ACTION, (newAction) => {
     const action = new Action(null, null, null, null);
     action.parseData(newAction);
-    chain.newTransaction(action);
+    chain.newAction(action);
     console.info(
-      `Added transaction: ${JSON.stringify(
-        transaction.getDetails(),
-        null,
-        "\t"
-      )}`
+      `Added action: ${JSON.stringify(action.getDetails(), null, "\t")}`
     );
   });
 

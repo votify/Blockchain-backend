@@ -56,10 +56,10 @@ app.post("/action", (req, res) => {
   let clientAction = new Action(type, data, signature, lock);
   if (blockChain.verifyAction(clientAction)) {
     res.json({ status: "valid", id: clientAction.id });
-    io.emit(actions.ADD_TRANSACTION, clientAction);
+    io.emit(actions.ADD_ACTION, clientAction);
     blockChain.newAction(clientAction);
     console.log(
-      `Added transaction: ${JSON.stringify(
+      `Added action: ${JSON.stringify(
         clientAction.getDetails(),
         null,
         "\t"

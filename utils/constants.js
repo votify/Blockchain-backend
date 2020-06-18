@@ -1,5 +1,5 @@
 module.exports.actions = {
-  ADD_TRANSACTION: "add_transaction",
+  ADD_ACTION: "add_action",
   END_MINING: "end_mining",
   WRONG_HASH_GENERATE: "wrong_hash_generate",
   CHAIN_VERIFY: "chain_verify",
@@ -12,7 +12,7 @@ module.exports.actions = {
 
 module.exports.constants = {
   DIFFICULTY: "0000",
-  NUMBER_OF_TRANSACTION: 3,
+  NUMBER_OF_ACTION: 3,
   GENESIS_DATE: 1500000000,
   JSON: ".\\DATA\\key.json",
   FIRST_AMOUNT: 20,

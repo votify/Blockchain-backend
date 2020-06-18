@@ -215,8 +215,8 @@ class Chain {
     if (this.currentActions.length > 0 && !this.miningStatus) {
       this.miningStatus = true;
       let spliceNumber =
-        this.currentActions.length >= constants.NUMBER_OF_TRANSACTION
-          ? constants.NUMBER_OF_TRANSACTION
+        this.currentActions.length >= constants.NUMBER_OF_ACTION
+          ? constants.NUMBER_OF_ACTION
           : this.currentActions.length;
       this.actionBuffer = this.currentActions.splice(0, spliceNumber);
       console.info("Starting mining block...");
@@ -289,16 +289,16 @@ class Chain {
     console.info("Starting mining block...");
     const previousBlock = this.lastBlock();
     process.env.BREAK = false;
-    const transactionsInBlock = this.transactionBuffer.map((value) => {
-      let transaction = new Transaction(null, null, null);
-      transaction.parseTransaction(value);
-      return transaction;
+    const actionsInBlock = this.actionBuffer.map((value) => {
+      let action = new Action(null, null, null, null);
+      action.parseData(value);
+      return action;
     });
     const block = new Block(
       previousBlock.getIndex() + 1,
       previousBlock.hashValue(),
       previousBlock.getNonce(),
-      transactionsInBlock
+      actionsInBlock
     );
     forked().send(block);
     forked().on("message", (proof) => {
@@ -361,12 +361,12 @@ class Chain {
 
     for (let index1 = 0; index1 < this.actionBuffer.length; index1++) {
       if (
-        newBlockAction[index1].SHA256TransactionToHex() !==
-        this.actionBuffer[index1].SHA256TransactionToHex()
+        newBlockAction[index1].SHA256ActionToHex() !==
+        this.actionBuffer[index1].SHA256ActionToHex()
       ) {
-        console.log("Wrong transaction");
-        console.log(transactionInBlock[index1]);
-        console.log(this.transactionBuffer[index1]);
+        console.log("Wrong action");
+        console.log(newBlockAction[index1]);
+        console.log(this.actionBuffer[index1]);
         return false;
       }
     }

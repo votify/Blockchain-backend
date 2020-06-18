@@ -85,7 +85,7 @@ class Action {
     this.lock = action.lock;
   }
 
-  SHA256TransactionToHex() {
+  SHA256ActionToHex() {
     return SHA256DataToHex(this.getDetails());
   }
 }
