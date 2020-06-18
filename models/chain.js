@@ -147,6 +147,7 @@ class Chain {
       let election = this.elections[elections[index]];
 
       result.push({
+        id: elections[index],
         year: election.year,
         name: election.name,
         nominees: [...election.nominees],
@@ -154,6 +155,40 @@ class Chain {
       });
     }
     return result;
+  }
+
+  /**
+   *
+   * @param {string} electionId
+   */
+  getElection(electionId) {
+    let election = this.elections[electionId];
+
+    if (election === undefined) {
+      return { result: null };
+    }
+
+    let result = {
+      id: electionId,
+      year: election.year,
+      name: election.name,
+      nominees: [...election.nominees],
+      deadline: election.deadline,
+    };
+    return { result };
+  }
+
+  /**
+   *
+   * @param {string} actionId
+   */
+  getAction(actionId) {
+    let action = this.tableOfContent[actionId];
+
+    if (action === undefined) {
+      return { data: null };
+    }
+    return { data: this.blocks[action.block].actions[action.index].data };
   }
 
   mineBlock(block) {

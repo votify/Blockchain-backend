@@ -69,6 +69,11 @@ app.post("/action", (req, res) => {
   }
 });
 
+app.get("/action/:id", (req, res) => {
+  let id = req.params.id;
+  res.json(blockChain.getAction(id));
+});
+
 app.get("/chain", (req, res) => {
   res.json(blockChain.toArray()).end();
 });
@@ -94,6 +99,11 @@ app.get("/history/:lock", (req, res) => {
 app.get("/elections", (req, res) => {
   let elections = blockChain.getElections();
   res.json(elections);
+});
+
+app.get("/elections/:id", (req, res) => {
+  let id = req.params.id;
+  res.json(blockChain.getElection(id));
 });
 
 app.get("/hello", (req, res) => {
