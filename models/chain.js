@@ -455,6 +455,9 @@ class Chain {
    */
   setElection(year, name, nominees, deadline) {
     let electionId = `_${year}_${GetNormalize(name)}`;
+    if (this.elections[electionId] !== undefined) {
+      return false;
+    }
     this.elections[electionId] = {
       year,
       name,
@@ -462,6 +465,8 @@ class Chain {
       nominees,
       voters: {},
     };
+
+    return true;
   }
 
   /**
@@ -472,7 +477,12 @@ class Chain {
    */
   extentElection(year, name, newDeadline) {
     let electionId = `_${year}_${GetNormalize(name)}`;
-    this.elections[electionId].deadline = newDeadline;
+    if (this.elections[electionId] !== undefined) {
+      this.elections[electionId].deadline = newDeadline;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   addToToC() {

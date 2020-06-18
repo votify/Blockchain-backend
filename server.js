@@ -59,11 +59,7 @@ app.post("/action", (req, res) => {
     io.emit(actions.ADD_ACTION, clientAction);
     blockChain.newAction(clientAction);
     console.log(
-      `Added action: ${JSON.stringify(
-        clientAction.getDetails(),
-        null,
-        "\t"
-      )}`
+      `Added action: ${JSON.stringify(clientAction.getDetails(), null, "\t")}`
     );
   } else {
     res.json({ status: "invalid", id: null });
@@ -131,16 +127,20 @@ app.post("/request-list", (req, res) => {
 
 app.post("/setelection", (req, res) => {
   const { year, name, nominees, deadline } = req.body;
-  io.emit(actions.ADD_ELECTION, req.body);
-  blockChain.setElection(year, name, nominees, deadline);
-  res.json({ status: 200 });
+  let result = blockChain.setElection(year, name, nominees, deadline);
+  if (result) {
+    io.emit(actions.ADD_ELECTION, req.body);
+  }
+  res.json({ status: result });
 });
 
 app.post("/extentelection", (req, res) => {
   const { year, name, newDeadline } = req.body;
-  io.emit(actions.EXTENT_ELECTION, req.body);
-  blockChain.extentElection(year, name, newDeadline);
-  res.json({ status: 200 });
+  let result = blockChain.extentElection(year, name, newDeadline);
+  if (result) {
+    io.emit(actions.EXTENT_ELECTION, req.body);
+  }
+  res.json({ status: result });
 });
 
 app.post("/update-list", (req, res) => {
