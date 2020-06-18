@@ -10,9 +10,18 @@ class Users {
    */
   constructor(id, dob, name, pubKey) {
     this.id = id;
+    if (dob !== null) {
+      this.dob = new Date(dob);
+    } else {
+      this.dob = null;
+    }
     this.dob = new Date(dob.getTime());
     this.name = name;
-    this.pubKey = Uint8Array.from(pubKey);
+    if (pubKey !== null) {
+      this.pubKey = Uint8Array.from(pubKey);
+    } else {
+      this.pubKey = null;
+    }
   }
 
   getDetails() {
@@ -41,7 +50,7 @@ class Users {
    */
   parseData(user) {
     this.id = user.id;
-    this.dob = new Date(user.dob.getTime());
+    this.dob = new Date(user.dob);
     this.name = user.name;
     this.pubKey = Uint8Array.from(user.pubKey);
   }
