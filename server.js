@@ -182,7 +182,9 @@ io.on("connection", (socket) => {
 
   if (status === false) {
     setInterval(function () {
-      io.emit(actions.CHECKING);
+      if (!blockChain.miningStatus) {
+        io.emit(actions.CHECKING);
+      }
     }, 300000);
   }
 
