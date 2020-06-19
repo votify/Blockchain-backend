@@ -98,6 +98,12 @@ app.get("/elections", (req, res) => {
   res.json(elections);
 });
 
+app.get("/address/:pubKey", (req, res) => {
+  let pubKey = req.params.pubKey;
+  let address = blockChain.getLock(pubKey);
+  res.json({ address });
+});
+
 app.get("/elections/:id", (req, res) => {
   let id = req.params.id;
   res.json(blockChain.getElection(id));
