@@ -68,7 +68,7 @@ class Action {
     this.type = action.type;
     this.timeStamp = action.timeStamp;
 
-    if (type === "users") {
+    if (this.type === "users") {
       this.data = new Users(null, null, null, null);
       this.data.parseData(action.data.getData());
     } else {
