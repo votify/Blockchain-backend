@@ -78,10 +78,10 @@ class Action {
 
     if (this.type === "users") {
       this.data = new Users(null, null, null, null);
-      this.data.parseData(action.data.getData());
+      this.data.parseData(action.data);
     } else {
       this.data = new Vote(null, null, null);
-      this.data.parseData(action.data.getData());
+      this.data.parseData(action.data);
     }
 
     if (action.signature !== null) {
