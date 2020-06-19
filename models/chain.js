@@ -230,7 +230,6 @@ class Chain {
       this.actionBuffer = this.currentActions.splice(0, spliceNumber);
       console.info("Starting mining block...");
       const previousBlock = this.lastBlock();
-      console.log(this.blocks);
       const actionsInBlock = this.actionBuffer.map((value) => {
         let action = new Action(null, null, null, null);
         action.parseData(value);
