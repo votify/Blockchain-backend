@@ -1,7 +1,7 @@
 const Block = require("./blocks");
 const Action = require("./actions");
 const forked = require("../utils/global");
-const { constants } = require("../utils/constants");
+const { constants, actions } = require("../utils/constants");
 const { GetNormalize } = require("../utils/function");
 const Users = require("./users");
 const secp256k1 = require("secp256k1");
@@ -224,7 +224,6 @@ class Chain {
       this.actionBuffer = this.currentActions.splice(0, spliceNumber);
       console.info("Starting mining block...");
       const previousBlock = this.lastBlock();
-      console.log(this.blocks);
       const actionsInBlock = this.actionBuffer.map((value) => {
         let action = new Action(null, null, null, null);
         action.parseData(value);
