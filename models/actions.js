@@ -42,7 +42,7 @@ class Action {
   getDetails() {
     const { id, type, timeStamp, data, signature, lock } = this;
     let hex = null;
-    if (signature !== undefined) {
+    if (signature !== null) {
       hex = ArrayToStringHex(signature);
     }
     return {
