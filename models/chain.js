@@ -279,7 +279,7 @@ class Chain {
       let currentBlockActions = this.blocks[index].actions;
       for (let index1 = 0; index1 < currentBlockActions.length; index1++) {
         if (currentBlockActions[index1].type !== "users") {
-          if (currentBlockActions[index1].id === lock) {
+          if (currentBlockActions[index1].lock === lock) {
             let tempAction = new Action(null, null, null, null);
             tempAction.parseData(currentBlockActions[index1]);
             myActions.push({
