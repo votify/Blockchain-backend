@@ -1,4 +1,4 @@
-const { ArrayToStringHex, JSONToUint8Array } = require("../utils/function");
+const { ArrayToStringHex } = require("../utils/function");
 
 class Users {
   /**
@@ -17,7 +17,7 @@ class Users {
     }
     this.name = name;
     if (pubKey !== null) {
-      this.pubKey = Uint8Array.from(pubKey);
+      this.pubKey = [...pubKey];
     } else {
       this.pubKey = null;
     }
@@ -29,7 +29,7 @@ class Users {
       id,
       dob,
       name,
-      pubKey: Buffer.from(pubKey).toString("hex"),
+      pubKey: ArrayToStringHex(pubKey),
     };
   }
 
@@ -45,13 +45,13 @@ class Users {
 
   /**
    *
-   * @param {{id:string, dob:Date, name:string, pubKey:Uint8Array}} user
+   * @param {{id:string, dob:Date, name:string, pubKey:number[]}} user
    */
   parseData(user) {
     this.id = user.id;
     this.dob = new Date(user.dob);
     this.name = user.name;
-    this.pubKey = Uint8Array.from(user.pubKey);
+    this.pubKey = [...user.pubKey];
   }
 
   getPubKeyHex() {

@@ -1,4 +1,8 @@
-const { GetID, SHA256DataToHex } = require("../utils/function");
+const {
+  GetID,
+  SHA256DataToHex,
+  ArrayToStringHex,
+} = require("../utils/function");
 const Vote = require("./vote");
 const Users = require("./users");
 
@@ -7,7 +11,7 @@ class Action {
    *
    * @param {string} type
    * @param {Users|Vote} data -Class Users or Elections
-   * @param {Uint8Array} signature
+   * @param {number[]} signature
    * @param {string} lock
    */
   constructor(type, data, signature, lock) {
@@ -25,7 +29,7 @@ class Action {
     }
 
     if (signature !== null) {
-      this.signature = Uint8Array.from(signature);
+      this.signature = [...signature];
     } else {
       this.signature = null;
     }
@@ -42,7 +46,7 @@ class Action {
       type,
       timeStamp,
       data: data.getDetails(),
-      signature: Buffer.from(signature).toString("hex"),
+      signature: ArrayToStringHex(signature),
       lock,
     };
   }
@@ -61,7 +65,7 @@ class Action {
 
   /**
    *
-   * @param {{id:string, type:string, timeStamp:number, data:Users|Vote, signature:Uint8Array, lock:string}} action
+   * @param {{id:string, type:string, timeStamp:number, data:Users|Vote, signature:number[], lock:string}} action
    */
   parseData(action) {
     this.id = action.id;
@@ -77,7 +81,7 @@ class Action {
     }
 
     if (action.signature !== null) {
-      this.signature = Uint8Array.from(action.signature);
+      this.signature = [...action.signature];
     } else {
       this.signature = null;
     }

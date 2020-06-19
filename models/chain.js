@@ -66,7 +66,13 @@ class Chain {
       .pubKey;
 
     let dataHash = action.data.getDataHash();
-    if (!secp256k1.ecdsaVerify(action.signature, dataHash, pubkey)) {
+    if (
+      !secp256k1.ecdsaVerify(
+        new Uint8Array(action.signature),
+        dataHash,
+        new Uint8Array(pubkey)
+      )
+    ) {
       return false;
     }
 
