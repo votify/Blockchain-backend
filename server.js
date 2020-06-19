@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 var nodeList = [];
 var status = false;
 
-const blockChain = new BlockChain(null, io);
+const blockChain = new BlockChain(io, null);
 
 app.use(logger("dev"));
 app.use(bodyParser.json());
