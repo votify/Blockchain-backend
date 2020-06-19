@@ -257,7 +257,7 @@ class Chain {
     for (let index = 0; index < this.blocks.length; index++) {
       let currentBlockActions = this.blocks[index].actions;
       for (let index1 = 0; index1 < currentBlockActions.length; index1++) {
-        if (currentBlockActions[index1].type === "user") {
+        if (currentBlockActions[index1].type === "users") {
           let temp = new Users(null, null, null, null);
           temp.parseData(currentBlockActions[index1].data);
           if (temp.getPubKeyHex() === pubKey) {
@@ -278,7 +278,7 @@ class Chain {
     for (let index = 0; index < this.blocks.length; index++) {
       let currentBlockActions = this.blocks[index].actions;
       for (let index1 = 0; index1 < currentBlockActions.length; index1++) {
-        if (currentBlockActions[index1].type === "users") {
+        if (currentBlockActions[index1].type !== "users") {
           if (currentBlockActions[index1].id === lock) {
             let tempAction = new Action(null, null, null, null);
             tempAction.parseData(currentBlockActions[index1]);
@@ -420,7 +420,6 @@ class Chain {
         const tempBlock = new Block(null, null, null, null);
         tempBlock.parseBlock(this.blocksBuffer);
         this.blocks.push(tempBlock);
-        console.log("current Block:", this.blocks);
         this.blocksBuffer = null;
         this.actionBuffer = null;
         this.isConfirm = true;
