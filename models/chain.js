@@ -201,7 +201,7 @@ class Chain {
   }
 
   mineBlock(block) {
-    this.blocksBuffer = [block];
+    this.blocksBuffer = block;
     this.confirm++;
     this.reset();
     console.log("Mined Successfully");
@@ -389,7 +389,7 @@ class Chain {
    */
   parseChain(blocks) {
     this.blocks = blocks.map((block) => {
-      const parsedBlock = new Block(0);
+      const parsedBlock = new Block(null, null, null, null);
       parsedBlock.parseBlock(block);
       return parsedBlock;
     });
