@@ -70,10 +70,11 @@ module.exports.ParseHexString = (str) => {
  */
 module.exports.GetID = (timeStamp) => {
   const random = Math.random() * 100000000;
-  var buffer = crypto
+  var hashHex = crypto
     .createHash("sha256")
     .update(`${timeStamp}-${random}`, "utf8")
-    .digest();
+    .digest("hex");
+  var buffer = crypto.createHash("sha1").update(hashHex, "utf8").digest();
   return bs58.encode(buffer);
 };
 
