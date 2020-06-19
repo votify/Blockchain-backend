@@ -41,12 +41,16 @@ class Action {
 
   getDetails() {
     const { id, type, timeStamp, data, signature, lock } = this;
+    let hex = null;
+    if (signature !== undefined) {
+      hex = ArrayToStringHex(signature);
+    }
     return {
       id,
       type,
       timeStamp,
       data: data.getDetails(),
-      signature: ArrayToStringHex(signature),
+      signature: hex,
       lock,
     };
   }
