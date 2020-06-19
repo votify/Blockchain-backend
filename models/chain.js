@@ -421,6 +421,7 @@ class Chain {
         const tempBlock = new Block(null, null, null, null);
         tempBlock.parseBlock(this.blocksBuffer);
         this.blocks = this.blocks.push(tempBlock);
+        console.log("current Block:", this.blocks);
         this.blocksBuffer = null;
         this.actionBuffer = null;
         this.isConfirm = true;
