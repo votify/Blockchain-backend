@@ -111,12 +111,10 @@ class Chain {
 
   /**
    *
-   * @param {number} year
-   * @param {string} name
+   * @param {string} electionId
    */
-  countVote(year, name) {
+  countVote(electionId) {
     let result = {};
-    let electionId = `_${year}_${GetNormalize(name)}`;
     let thisElection = this.elections[electionId];
     if (thisElection === undefined) {
       return false;
@@ -144,7 +142,7 @@ class Chain {
       }
     }
 
-    return result;
+    return Object.values(result);
   }
 
   /**

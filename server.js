@@ -81,9 +81,9 @@ app.get("/check/:address", (req, res) => {
   res.json({ result });
 });
 
-app.post("/count", (req, res) => {
-  const { year, name } = req.body;
-  let result = blockChain.countVote(parseInt(year), name);
+app.get("/count/:id", (req, res) => {
+  const id = req.params.id;
+  let result = blockChain.countVote(id);
   res.json({ result });
 });
 
