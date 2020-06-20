@@ -2,7 +2,7 @@ const Block = require("./blocks");
 const Action = require("./actions");
 const forked = require("../utils/global");
 const { constants, actions } = require("../utils/constants");
-const { GetNormalize } = require("../utils/function");
+const { GetNormalize, ArrayToStringHex } = require("../utils/function");
 const Users = require("./users");
 const secp256k1 = require("secp256k1");
 
@@ -37,6 +37,7 @@ class Chain {
     this.isConfirm = false;
     this.tableOfContent = {};
     this.elections = {};
+    this.usersBuffer = {};
   }
 
   /**
@@ -53,7 +54,17 @@ class Chain {
    */
   verifyAction(action) {
     if (action.type === "users") {
-      return true;
+      if (!this.getLock(ArrayToStringHex(action.data.pubKey))) {
+        if (
+          this.usersBuffer[ArrayToStringHex(action.data.pubKey)] === undefined
+        ) {
+          this.usersBuffer[ArrayToStringHex(action.data.pubKey)] = true;
+          return true;
+        }
+        return false;
+      } else {
+        return false;
+      }
     }
 
     let position = this.tableOfContent[action.lock];
@@ -497,6 +508,10 @@ class Chain {
     for (let index = 0; index < this.actionBuffer.length; index++) {
       let action = this.actionBuffer[index];
       this.tableOfContent[action.id] = { block: this.blocks.length, index };
+
+      if (action.type === "users") {
+        delete this.usersBuffer[ArrayToStringHex(action.data.pubKey)];
+      }
     }
   }
 }
