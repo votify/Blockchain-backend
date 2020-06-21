@@ -4,6 +4,7 @@ const httpServer = require("http").Server(app);
 const axios = require("axios");
 const io = require("socket.io")(httpServer);
 const client = require("socket.io-client");
+const logger = require("morgan");
 
 const BlockChain = require("./models/chain");
 const Action = require("./models/actions");
@@ -14,17 +15,19 @@ const socketListeners = require("./socketListeners");
 const PORT = process.env.PORT || 3000;
 
 var nodeList = [];
+var status = false;
 
-const blockChain = new BlockChain(null, io);
+const blockChain = new BlockChain(io, null);
 
+app.use(logger("dev"));
 app.use(bodyParser.json());
 
 app.post("/nodes", (req, res) => {
   const { host } = req.body;
   const { callback, nodeLength } = req.query;
   const node = `https://${host}`;
-  nodeList.push(node);
   const socketNode = socketListeners(io, client(node), blockChain);
+  nodeList.push({ node, id: socketNode.id });
   blockChain.addNode(socketNode);
   if (callback === "true") {
     if (parseInt(nodeLength) > 1 && nodeList.length === 1) {
@@ -53,18 +56,19 @@ app.post("/action", (req, res) => {
   let clientAction = new Action(type, data, signature, lock);
   if (blockChain.verifyAction(clientAction)) {
     res.json({ status: "valid", id: clientAction.id });
-    io.emit(actions.ADD_TRANSACTION, clientTansaction);
+    io.emit(actions.ADD_ACTION, clientAction);
     blockChain.newAction(clientAction);
     console.log(
-      `Added transaction: ${JSON.stringify(
-        clientAction.getDetails(),
-        null,
-        "\t"
-      )}`
+      `Added action: ${JSON.stringify(clientAction.getDetails(), null, "\t")}`
     );
   } else {
     res.json({ status: "invalid", id: null });
   }
+});
+
+app.get("/action/:id", (req, res) => {
+  let id = req.params.id;
+  res.json(blockChain.getAction(id));
 });
 
 app.get("/chain", (req, res) => {
@@ -77,10 +81,10 @@ app.get("/check/:address", (req, res) => {
   res.json({ result });
 });
 
-app.get("/count", (req, res) => {
-  const { year, name } = req.query;
-  let result = blockChain.countVote(parseInt(year), name);
-  res.json(result);
+app.get("/count/:id", (req, res) => {
+  const id = req.params.id;
+  let result = blockChain.countVote(id);
+  res.json({ result });
 });
 
 app.get("/history/:lock", (req, res) => {
@@ -94,6 +98,17 @@ app.get("/elections", (req, res) => {
   res.json(elections);
 });
 
+app.get("/address/:pubKey", (req, res) => {
+  let pubKey = req.params.pubKey;
+  let address = blockChain.getLock(pubKey);
+  res.json({ address });
+});
+
+app.get("/elections/:id", (req, res) => {
+  let id = req.params.id;
+  res.json(blockChain.getElection(id));
+});
+
 app.get("/hello", (req, res) => {
   io.emit("hello");
   res.json({ status: 200 });
@@ -101,11 +116,6 @@ app.get("/hello", (req, res) => {
 
 app.get("/check", (req, res) => {
   res.json(true);
-});
-
-app.get("/node-list", (req, res) => {
-  io.emit("get nodeList");
-  res.json({ status: 200 });
 });
 
 app.get("/getnodelist", (req, res) => {
@@ -121,14 +131,32 @@ app.post("/request-list", (req, res) => {
   res.json({ status: "request accepted" }).end();
 });
 
+app.post("/setelection", (req, res) => {
+  const { year, name, nominees, deadline } = req.body;
+  let result = blockChain.setElection(year, name, nominees, deadline);
+  if (result) {
+    io.emit(actions.ADD_ELECTION, req.body);
+  }
+  res.json({ status: result });
+});
+
+app.post("/extentelection", (req, res) => {
+  const { year, name, newDeadline } = req.body;
+  let result = blockChain.extentElection(year, name, newDeadline);
+  if (result) {
+    io.emit(actions.EXTENT_ELECTION, req.body);
+  }
+  res.json({ status: result });
+});
+
 app.post("/update-list", (req, res) => {
   const { requestNodeList } = req.body;
   const currentNode = `https://${req.hostname}`;
   console.log(currentNode);
 
   for (let index = 0; index < requestNodeList.length; index++) {
-    if (requestNodeList[index] !== currentNode) {
-      axios.post(`${requestNodeList[index]}/request-join`, {
+    if (requestNodeList[index].node !== currentNode) {
+      axios.post(`${requestNodeList[index].node}/request-join`, {
         host: req.hostname,
       });
     }
@@ -140,8 +168,8 @@ app.post("/request-join", (req, res) => {
   const { host } = req.body;
   const { callback } = req.query;
   const node = `https://${host}`;
-  nodeList.push(node);
   const socketNode = socketListeners(io, client(node), blockChain);
+  nodeList.push({ node, id: socketNode.id });
   blockChain.addNode(socketNode);
   if (callback === "true") {
     console.info(`Added node ${node} back`);
@@ -157,8 +185,23 @@ app.post("/request-join", (req, res) => {
 
 io.on("connection", (socket) => {
   console.info(`Socket connected, ID: ${socket.id}`);
+
+  if (status === false) {
+    setInterval(function () {
+      if (!blockChain.miningStatus) {
+        io.emit(actions.CHECKING);
+      }
+    }, 300000);
+  }
+
   socket.on("disconnect", () => {
     console.log(`Socket disconnected, ID: ${socket.id}`);
+    for (let index = 0; index < nodeList.length; index++) {
+      if (nodeList[index].id === socket.id) {
+        nodeList.splice(index, 1);
+        break;
+      }
+    }
   });
 });
 

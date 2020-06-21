@@ -1,18 +1,39 @@
-const { GetID, SHA256DataToHex } = require("../utils/function");
-const Elections = require("./election");
+const {
+  GetID,
+  SHA256DataToHex,
+  ArrayToStringHex,
+} = require("../utils/function");
+const Vote = require("./vote");
+const Users = require("./users");
 
 class Action {
   /**
    *
    * @param {string} type
-   * @param {Elections|Users|Vote} data -Class Users or Elections
-   * @param {Uint8Array} signature
+   * @param {Users|Vote} data -Class Users or Elections
+   * @param {number[]} signature
    * @param {string} lock
    */
   constructor(type, data, signature, lock) {
     this.type = type;
-    this.data = data;
-    this.signature = Uint8Array.from(signature);
+    if (type === "users") {
+      this.data = new Users(null, null, null, null);
+      if (data !== null) {
+        this.data.parseData(data);
+      }
+    } else {
+      this.data = new Vote(null, null, null);
+      if (data !== null) {
+        this.data.parseData(data);
+      }
+    }
+
+    if (signature !== null) {
+      this.signature = [...signature];
+    } else {
+      this.signature = null;
+    }
+
     this.lock = lock;
     this.timeStamp = Date.now();
     this.id = GetID(this.timeStamp);
@@ -20,12 +41,16 @@ class Action {
 
   getDetails() {
     const { id, type, timeStamp, data, signature, lock } = this;
+    let hex = null;
+    if (signature !== null) {
+      hex = ArrayToStringHex(signature);
+    }
     return {
       id,
       type,
       timeStamp,
       data: data.getDetails(),
-      signature: Buffer.from(signature).toString("hex"),
+      signature: hex,
       lock,
     };
   }
@@ -44,18 +69,31 @@ class Action {
 
   /**
    *
-   * @param {{id:string, type:string, timeStamp:number, data:Elections|Users|Vote, signature:Uint8Array, lock:string}} action
+   * @param {{id:string, type:string, timeStamp:number, data:Users|Vote, signature:number[], lock:string}} action
    */
   parseData(action) {
     this.id = action.id;
     this.type = action.type;
     this.timeStamp = action.timeStamp;
-    this.data.parseData(action.data.getData());
-    this.signature = Uint8Array.from(action.signature);
+
+    if (this.type === "users") {
+      this.data = new Users(null, null, null, null);
+      this.data.parseData(action.data);
+    } else {
+      this.data = new Vote(null, null, null);
+      this.data.parseData(action.data);
+    }
+
+    if (action.signature !== null) {
+      this.signature = [...action.signature];
+    } else {
+      this.signature = null;
+    }
+
     this.lock = action.lock;
   }
 
-  SHA256TransactionToHex() {
+  SHA256ActionToHex() {
     return SHA256DataToHex(this.getDetails());
   }
 }

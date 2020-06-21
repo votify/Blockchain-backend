@@ -1,7 +1,8 @@
 const Block = require("./blocks");
 const Action = require("./actions");
 const forked = require("../utils/global");
-const { constants } = require("../utils/constants");
+const { constants, actions } = require("../utils/constants");
+const { GetNormalize, ArrayToStringHex } = require("../utils/function");
 const Users = require("./users");
 const secp256k1 = require("secp256k1");
 
@@ -36,6 +37,7 @@ class Chain {
     this.isConfirm = false;
     this.tableOfContent = {};
     this.elections = {};
+    this.usersBuffer = {};
   }
 
   /**
@@ -52,7 +54,17 @@ class Chain {
    */
   verifyAction(action) {
     if (action.type === "users") {
-      return true;
+      if (!this.getLock(ArrayToStringHex(action.data.pubKey))) {
+        if (
+          this.usersBuffer[ArrayToStringHex(action.data.pubKey)] === undefined
+        ) {
+          this.usersBuffer[ArrayToStringHex(action.data.pubKey)] = true;
+          return true;
+        }
+        return false;
+      } else {
+        return false;
+      }
     }
 
     let position = this.tableOfContent[action.lock];
@@ -65,12 +77,18 @@ class Chain {
       .pubKey;
 
     let dataHash = action.data.getDataHash();
-    if (!secp256k1.ecdsaVerify(action.signature, dataHash, pubkey)) {
+    if (
+      !secp256k1.ecdsaVerify(
+        new Uint8Array(action.signature),
+        dataHash,
+        new Uint8Array(pubkey)
+      )
+    ) {
       return false;
     }
 
     if (action.type === "vote") {
-      let electionId = `${action.data.year}--${action.data.name}`;
+      let electionId = `_${action.data.year}_${GetNormalize(action.data.name)}`;
       let voterList = this.elections[electionId];
       if (voterList === undefined) {
         return false;
@@ -78,10 +96,7 @@ class Chain {
         if (voterList.voters[action.lock] !== undefined) {
           return false;
         } else {
-          let electionPos = this.tableOfContent[voterList.address];
-          let deadline = this.blocks[electionPos.block].actions[
-            electionPos.index
-          ].data.deadline;
+          let deadline = voterList.deadline;
           if (action.timeStamp < deadline) {
             this.elections[electionId].voters[action.lock] = action.id;
           } else {
@@ -96,12 +111,10 @@ class Chain {
 
   /**
    *
-   * @param {number} year
-   * @param {string} name
+   * @param {string} electionId
    */
-  countVote(year, name) {
+  countVote(electionId) {
     let result = {};
-    let electionId = `${year}--${name}`;
     let thisElection = this.elections[electionId];
     if (thisElection === undefined) {
       return false;
@@ -112,21 +125,24 @@ class Chain {
       let votePos = this.tableOfContent[votersList[index]];
       if (votePos !== undefined) {
         let vote = this.blocks[votePos.block].actions[votePos.index];
-        if (result[vote.data.nominee] === undefined) {
-          result[vote.data.nominee] = 1;
+        if (result[GetNormalize(vote.data.nominee)] === undefined) {
+          result[GetNormalize(vote.data.nominee)] = {
+            name: vote.data.nominee,
+            count: 1,
+          };
         } else {
-          result[vote.data.nominee] += 1;
+          result[GetNormalize(vote.data.nominee)].count += 1;
         }
       } else {
         if (result.UnCount === undefined) {
-          result.UnCount = 1;
+          result.UnCount = { name: "Uncount vote", count: 1 };
         } else {
-          result.UnCount += 1;
+          result.UnCount.count += 1;
         }
       }
     }
 
-    return result;
+    return Object.values(result);
   }
 
   /**
@@ -146,19 +162,55 @@ class Chain {
     let result = [];
 
     for (let index = 0; index < elections.length; index++) {
-      let id = this.elections[elections[index]].address;
-      let electionPos = this.tableOfContent[id];
-      const election = new Action(null, null, null, null);
-      election.parseData(
-        this.blocks[electionPos.block].actions[electionPos.index]
-      );
-      result.push(election);
+      let election = this.elections[elections[index]];
+
+      result.push({
+        id: elections[index],
+        year: election.year,
+        name: election.name,
+        nominees: [...election.nominees],
+        deadline: election.deadline,
+      });
     }
     return result;
   }
 
+  /**
+   *
+   * @param {string} electionId
+   */
+  getElection(electionId) {
+    let election = this.elections[electionId];
+
+    if (election === undefined) {
+      return { result: null };
+    }
+
+    let result = {
+      id: electionId,
+      year: election.year,
+      name: election.name,
+      nominees: [...election.nominees],
+      deadline: election.deadline,
+    };
+    return { result };
+  }
+
+  /**
+   *
+   * @param {string} actionId
+   */
+  getAction(actionId) {
+    let action = this.tableOfContent[actionId];
+
+    if (action === undefined) {
+      return { data: null };
+    }
+    return { data: this.blocks[action.block].actions[action.index].data };
+  }
+
   mineBlock(block) {
-    this.blocksBuffer = [block];
+    this.blocksBuffer = block;
     this.confirm++;
     this.reset();
     console.log("Mined Successfully");
@@ -181,13 +233,12 @@ class Chain {
     if (this.currentActions.length > 0 && !this.miningStatus) {
       this.miningStatus = true;
       let spliceNumber =
-        this.currentActions.length >= constants.NUMBER_OF_TRANSACTION
-          ? constants.NUMBER_OF_TRANSACTION
+        this.currentActions.length >= constants.NUMBER_OF_ACTION
+          ? constants.NUMBER_OF_ACTION
           : this.currentActions.length;
       this.actionBuffer = this.currentActions.splice(0, spliceNumber);
       console.info("Starting mining block...");
       const previousBlock = this.lastBlock();
-      process.env.BREAK = false;
       const actionsInBlock = this.actionBuffer.map((value) => {
         let action = new Action(null, null, null, null);
         action.parseData(value);
@@ -215,7 +266,7 @@ class Chain {
     for (let index = 0; index < this.blocks.length; index++) {
       let currentBlockActions = this.blocks[index].actions;
       for (let index1 = 0; index1 < currentBlockActions.length; index1++) {
-        if (currentBlockActions[index1].type === "user") {
+        if (currentBlockActions[index1].type === "users") {
           let temp = new Users(null, null, null, null);
           temp.parseData(currentBlockActions[index1].data);
           if (temp.getPubKeyHex() === pubKey) {
@@ -236,11 +287,14 @@ class Chain {
     for (let index = 0; index < this.blocks.length; index++) {
       let currentBlockActions = this.blocks[index].actions;
       for (let index1 = 0; index1 < currentBlockActions.length; index1++) {
-        if (currentBlockActions[index1].type === "user") {
-          if (currentBlockActions[index1].id === lock) {
+        if (currentBlockActions[index1].type !== "users") {
+          if (currentBlockActions[index1].lock === lock) {
             let tempAction = new Action(null, null, null, null);
             tempAction.parseData(currentBlockActions[index1]);
-            myActions.push(tempAction);
+            myActions.push({
+              data: tempAction.data.getDetails(),
+              time: tempAction.timeStamp,
+            });
           }
         }
       }
@@ -252,16 +306,16 @@ class Chain {
     console.info("Starting mining block...");
     const previousBlock = this.lastBlock();
     process.env.BREAK = false;
-    const transactionsInBlock = this.transactionBuffer.map((value) => {
-      let transaction = new Transaction(null, null, null);
-      transaction.parseTransaction(value);
-      return transaction;
+    const actionsInBlock = this.actionBuffer.map((value) => {
+      let action = new Action(null, null, null, null);
+      action.parseData(value);
+      return action;
     });
     const block = new Block(
       previousBlock.getIndex() + 1,
       previousBlock.hashValue(),
       previousBlock.getNonce(),
-      transactionsInBlock
+      actionsInBlock
     );
     forked().send(block);
     forked().on("message", (proof) => {
@@ -324,12 +378,12 @@ class Chain {
 
     for (let index1 = 0; index1 < this.actionBuffer.length; index1++) {
       if (
-        newBlockAction[index1].SHA256TransactionToHex() !==
-        this.actionBuffer[index1].SHA256TransactionToHex()
+        newBlockAction[index1].SHA256ActionToHex() !==
+        this.actionBuffer[index1].SHA256ActionToHex()
       ) {
-        console.log("Wrong transaction");
-        console.log(transactionInBlock[index1]);
-        console.log(this.transactionBuffer[index1]);
+        console.log("Wrong action");
+        console.log(newBlockAction[index1]);
+        console.log(this.actionBuffer[index1]);
         return false;
       }
     }
@@ -344,7 +398,7 @@ class Chain {
    */
   parseChain(blocks) {
     this.blocks = blocks.map((block) => {
-      const parsedBlock = new Block(0);
+      const parsedBlock = new Block(null, null, null, null);
       parsedBlock.parseBlock(block);
       return parsedBlock;
     });
@@ -374,7 +428,7 @@ class Chain {
         this.addToToC();
         const tempBlock = new Block(null, null, null, null);
         tempBlock.parseBlock(this.blocksBuffer);
-        this.blocks = this.blocks.push(tempBlock);
+        this.blocks.push(tempBlock);
         this.blocksBuffer = null;
         this.actionBuffer = null;
         this.isConfirm = true;
@@ -409,17 +463,52 @@ class Chain {
     this.isConfirm = false;
   }
 
+  /**
+   *
+   * @param {number} year
+   * @param {string} name
+   * @param {string[]} nominees
+   * @param {number} deadline
+   */
+  setElection(year, name, nominees, deadline) {
+    let electionId = `_${year}_${GetNormalize(name)}`;
+    if (this.elections[electionId] !== undefined) {
+      return false;
+    }
+    this.elections[electionId] = {
+      year,
+      name,
+      deadline,
+      nominees,
+      voters: {},
+    };
+
+    return true;
+  }
+
+  /**
+   *
+   * @param {number} year
+   * @param {string} name
+   * @param {number} newDeadline
+   */
+  extentElection(year, name, newDeadline) {
+    let electionId = `_${year}_${GetNormalize(name)}`;
+    if (this.elections[electionId] !== undefined) {
+      this.elections[electionId].deadline = newDeadline;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   addToToC() {
     for (let index = 0; index < this.actionBuffer.length; index++) {
       let action = this.actionBuffer[index];
       this.tableOfContent[action.id] = { block: this.blocks.length, index };
 
-      if (action.type === "election") {
-        let electionId = `${action.data.year}--${action.data.name}`;
-        this.elections[electionId] = {
-          address: action.id,
-          voters: {},
-        };
+      if (action.type === "users") {
+        delete this.usersBuffer[ArrayToStringHex(action.data.pubKey)];
       }
     }
   }

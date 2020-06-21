@@ -6,7 +6,7 @@ class Block {
   /**
    *
    * @param {number} index
-   * @param {Uint8Array} previousBlockHash
+   * @param {string} previousBlockHash
    * @param {number} nonce -Float-
    * @param {Action[]} actions -Class Action-
    */
