@@ -360,7 +360,7 @@ class Chain {
    */
   compareCurrentBlock(otherBlocks) {
     const { blocks } = this;
-    if (blocks.length === otherBlocks.length + 1) {
+    if (otherBlocks.length !== blocks.length + 1) {
       console.log("Wrong block length");
       return false;
     }
